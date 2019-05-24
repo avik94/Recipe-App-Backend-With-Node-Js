@@ -21,8 +21,8 @@ sequelize
   
 app.use('/recipe', routerRecipe);
 app.use('/database', (req, res)=>{
-    Recipe.sync();
     Ingredient.sync();
+    Recipe.sync();
     res.status(200).json({
         mgs: "I just Start Myself jarvis"
     })

@@ -4,31 +4,38 @@ const Recipe = require('../models/recipe');
 const Ingredient = require('../models/ingredient');
 
 router.get('/', async(req, res)=>{
-    // try{
-    //     const recipeData = await Recipe.findAll(); 
-    //     let x = recipeData.map(el =>{   //[1,2,3,4]
-    //         return el
-    //     })
-    //     console.log(x)
-    //     result = [];
-    //     for(let i of x){
-    //         console.log(i)
-    //         const ingredient = await Ingredient.findAll({where:{recipeId: i}});
-    //         response = {
-    //             name: recipeData[i].name,
-    //             imageUrl: recipeData[i].imageUrl,
-    //             description: recipeData[i].description,
-    //             ingredients: ingredient
-    //         }            
-    //         result.push(response)
-    //     }
-    //     res.json(result)
+    try{
+        const recipeData = await Recipe.findAll();
+        let storeRecipeId = recipeData.map((el)=>{
+            return el.id;
+        })
+        let storeIngredientForRecipe = [];
+        for(let i of storeRecipeId){
+            const ingredientData = await Ingredient.findAll({where:{recipeId: i}}); 
+            storeIngredientForRecipe.push(ingredientData)
+        }
+        let result = recipeData.map((eachData, index) =>{
+            return response = {
+                name: eachData.name,
+                imageUrl: eachData.imageUrl,
+                description: eachData.description,
+                ingredients: storeIngredientForRecipe[index].map(ell=>{
+                    return {
+                        name: ell.name,
+                        ammount: ell.ammount
+                    }
+                })
+            };
+        })
+        console.log(storeIngredientForRecipe)
+        res.json(result)
+    
         
-    // }catch(err){
-    //     res.status(500).json({
-    //         error:err
-    //     })
-    // }
+    }catch(err){
+        res.status(500).json({
+            error:err
+        })
+    }
 });
 
 //for creating new recipe & Ingredience
@@ -175,4 +182,3 @@ router.post('/delete/:id', async(req,res) => {
 });
 
 module.exports = router;
-
