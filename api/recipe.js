@@ -97,86 +97,96 @@ router.post('/:id', async(req,res) => {
         ingredients: req.body.ingredients
     } 
     try{
-        const findRecipeId = await Ingredient.findAll({
-            where: {
-                recipeId: req.params.id
-            }
-        })
-        if(findRecipeId.length === 0){
-            res.status(500).json({ msg: "Please Check the Recipe!"})
-        }else{
-            if(req.body.ingredients.length <= 0 ){           // only update the recipe with edit
-                recipeData = {
-                    name: recipe.name,
-                    imageUrl: recipe.imageUrl,
-                    description: recipe.description
+        const validateRecipe = await validation.validateUser(
+            recipe.name,recipe.imageUrl,recipe.description,recipe.ingredients
+        )
+        try{
+            const findRecipeId = await Ingredient.findAll({
+                where: {
+                    recipeId: req.params.id
                 }
-                const updateRecipe = await Recipe.update(recipeData, {
-                    where: {
-                      id: req.params.id
+            })
+            if(findRecipeId.length === 0){
+                res.status(500).json({ msg: "Please Check the Recipe!"})
+            }else{
+                if(req.body.ingredients.length <= 0 ){           // only update the recipe with edit
+                    recipeData = {
+                        name: recipe.name,
+                        imageUrl: recipe.imageUrl,
+                        description: recipe.description
                     }
-                  });
-                res.status(200).json({ msg: "Recipe Updated Successfully"});
-            }else{                                         // update with ingredients with edit
-                recipeData = {
-                    name: recipe.name,
-                    imageUrl: recipe.imageUrl,
-                    description: recipe.description
-                }
-                const updateRecipe = await Recipe.update(recipeData, {
-                    where: {
-                      id: req.params.id
-                    }
-                  });
-                const findRelatedIngredients = await Ingredient.findAll({
-                    where:{
-                        recipeId: req.params.id
-                    }
-                });
-                if(recipe.ingredients.length === findRelatedIngredients.length ){ //update if not ingredient add dynamically
-                    let i = findRelatedIngredients[0].id;
-                    for (let ingredient of recipe.ingredients) {
-                        if(i === findRelatedIngredients.length+1){
-                            break;
-                        }else{
-                            ingredientData  = {
-                                name: ingredient.name,
-                                ammount: ingredient.ammount
-                            }
-                            const updateIngredients = await Ingredient.update(ingredientData, {
-                                where: {
-                                recipeId: req.params.id,
-                                id: i     
-                                }
-                            });
-                            i++
+                    const updateRecipe = await Recipe.update(recipeData, {
+                        where: {
+                          id: req.params.id
                         }
+                      });
+                    res.status(200).json({ msg: "Recipe Updated Successfully"});
+                }else{                                         // update with edit when ingredients are not set
+                    recipeData = {
+                        name: recipe.name,
+                        imageUrl: recipe.imageUrl,
+                        description: recipe.description
                     }
-                }else{                                                       // update if ingredient add dynamically
-                    const deleteData = await Ingredient.destroy({
+                    const updateRecipe = await Recipe.update(recipeData, {
+                        where: {
+                          id: req.params.id
+                        }
+                      });
+                    const findRelatedIngredients = await Ingredient.findAll({
                         where:{
                             recipeId: req.params.id
                         }
                     });
-                    for (let ingredient of recipe.ingredients){
-                        ingredientData = {
-                            name: ingredient.name,
-                            ammount: ingredient.ammount,
-                            recipeId: req.params.id
+                    if(recipe.ingredients.length === findRelatedIngredients.length ){ //update if not ingredient add dynamically
+                        let i = findRelatedIngredients[0].id;
+                        for (let ingredient of recipe.ingredients) {
+                            if(i === findRelatedIngredients.length+1){
+                                break;
+                            }else{
+                                ingredientData  = {
+                                    name: ingredient.name,
+                                    ammount: ingredient.ammount
+                                }
+                                const updateIngredients = await Ingredient.update(ingredientData, {
+                                    where: {
+                                    recipeId: req.params.id,
+                                    id: i     
+                                    }
+                                });
+                                i++
+                            }
                         }
-                        const createIngredient = await Ingredient.create(ingredientData);
+                    }else{                                                       // update if ingredient add dynamically
+                        const deleteData = await Ingredient.destroy({
+                            where:{
+                                recipeId: req.params.id
+                            }
+                        });
+                        for (let ingredient of recipe.ingredients){
+                            ingredientData = {
+                                name: ingredient.name,
+                                ammount: ingredient.ammount,
+                                recipeId: req.params.id
+                            }
+                            const createIngredient = await Ingredient.create(ingredientData);
+                        }
                     }
+                    
+                    res.status(200).json({msg: "Recipe And Ingredients Updated Succesfully"})
                 }
-                
-                res.status(200).json({msg: "Recipe And Ingredients Updated Succesfully"})
             }
+            
+        }catch(err){
+            res.status(500).json({err: err})
         }
-        
     }catch(err){
-        res.status(500).json({err: err})
+        res.json({msg: err})
     }
+    
+    
 })
 
+// deleting only exiting recipe
 router.post('/delete/:id', async(req,res) => {     
     try{
         const getId = await Recipe.findAll({where: {id: req.params.id}});
