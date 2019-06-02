@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../connection');
+const User =  require('./user');
 
 
 const Recipe = sequelize.define('recipe', {
@@ -19,6 +20,14 @@ const Recipe = sequelize.define('recipe', {
     description:{
         type: Sequelize.STRING,
         allowNull: false
+    },
+    user_id:{
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references:{
+            model: User,
+            key: 'id'
+        }
     }
 }) 
 

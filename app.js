@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+var cors = require('cors')
 const sequelize = require('./connection');
 const Recipe = require('./models/recipe')
 const Ingredient = require('./models/ingredient');
@@ -9,6 +10,7 @@ const authRouter = require('./api/auth');
 const bodyParsor = require('body-parser');
 app.use(bodyParsor.urlencoded({extended: false}))
 app.use(bodyParsor.json())
+app.use(cors());
 
 
 sequelize
@@ -22,13 +24,21 @@ sequelize
 
   
 app.use('/recipe', routerRecipe);
-app.use('/database', (req, res)=>{
-    Ingredient.sync();
-    Recipe.sync();
+app.get('/database', (req, res)=>{
+  setTimeout(()=>{
     User.sync();
+  },2000);
+  setTimeout(()=>{
+    Recipe.sync();
+  },3000);
+  setTimeout(()=>{
+    Ingredient.sync();
+  },4000);
+  setTimeout(()=>{
     res.status(200).json({
-        mgs: "I just Start Myself jarvis"
-    })
+      mgs: "I just Start Myself jarvis"
+  })
+  },5000);  
 });
 app.use('/',authRouter);
 app.use((req, res,next) =>{
